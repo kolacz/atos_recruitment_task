@@ -5,7 +5,9 @@ import org.json4s.native.JsonMethods._
 
 object ActionHandler {
 
-  def handle(request: String): Unit = {
+  import Action._
+
+  def handle(request: String): LibraryAction = lib => {
     val json = parse(request)
     val JObject(List((actionName, _))) = json
     val argsJson = json \ actionName
@@ -22,7 +24,7 @@ object ActionHandler {
       case _ => ???
     }
 
-    println(action)
+    action.perform(lib)
   }
 
 }

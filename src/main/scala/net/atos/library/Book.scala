@@ -1,3 +1,6 @@
 package net.atos.library
 
-final case class Book(title: String, year: Int, author: String, isAvailable: Boolean)
+final case class Book(title: String, 
+                      year: Int, 
+                      author: String, 
+                      isAvailable: Boolean)
