@@ -53,9 +53,9 @@ case class SearchBook(title: Option[String], year: Option[Int], author: Option[S
       book.title.contains(title getOrElse "") &&
       book.year.equals(year getOrElse book.year) &&
       book.author.contains(author getOrElse "")
-    
+
     val results = lib.inventory.filter{ case (id, book) => condition(book)}.toList.mkString("[", ",\n", "]")
-  
+
     (s"""{"OK": {"message": $results}}""", lib)
   }
 }

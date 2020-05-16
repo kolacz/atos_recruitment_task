@@ -8,13 +8,16 @@ object RequestHandler {
 
   import Action._
 
+  implicit val formats: Formats = DefaultFormats.withStrictOptionParsing
+
   def handle(request: String): LibraryAction = lib => {
-    val json = parse(request)
-    val JObject(List((actionName, _))) = json
+    val json = Try{ parse(request) } getOrElse new JObject(List(("wrongInput", null.asInstanceOf[JValue])))
+    val actionName = json match {
+      case JObject(List((actionName, _))) => actionName
+      case JObject(Nil) => "wrongInput"
+    }
+
     val argsJson = json \ actionName
-
-    implicit val formats: Formats = DefaultFormats.withStrictOptionParsing
-
     val action = actionName match {
       case "addBook"     => argsJson.extract[AddBook]
       case "removeBook"  => argsJson.extract[RemoveBook]
@@ -23,7 +26,7 @@ object RequestHandler {
       case "lendBook"    => argsJson.extract[LendBook]
       case "bookDetails" => argsJson.extract[BookDetails]
       case req =>
-        VoidAction(s"""{"ERROR": {"message": "Unknown request: '$req'"}}""")
+        VoidAction(s"""{"ERROR": {"message": "${if (req equals "wrongInput") "Wrong input!" else "Unknown request: '$req'"}"}}""")
     }
 
     action.perform(lib)
