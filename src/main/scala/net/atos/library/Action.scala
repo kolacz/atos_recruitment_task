@@ -22,9 +22,9 @@ case class RemoveBook(id: Long) extends Action {
     if (bookToRemoval.isDefined)
       if (bookToRemoval.get.isAvailable) {
         val updatedLib = Library(lib.inventory - id, lib.currentId)
-        (s"""{"OK": {"message": "$bookToRemoval has been removed"}}""", updatedLib)
+        (s"""{"OK": {"message": "${bookToRemoval.get} has been removed"}}""", updatedLib)
       } else 
-        (s"""{"ERROR": {"message": "Cannot delete $bookToRemoval, because it is lent"}}""", lib)
+        (s"""{"ERROR": {"message": "Cannot delete ${bookToRemoval.get}, because it is lent"}}""", lib)
     else
       (s"""{"ERROR": {"message": "There is not a book with id=$id"}}""", lib)
     
@@ -49,7 +49,14 @@ case class ListBooks() extends Action {
 
 case class SearchBook(title: Option[String], year: Option[Int], author: Option[String]) extends Action {
   def perform: LibraryAction = lib => {
-    ("", lib)
+    val condition: Book => Boolean = book =>
+      book.title.contains(title getOrElse "") &&
+      book.year.equals(year getOrElse book.year) &&
+      book.author.contains(author getOrElse "")
+    
+    val results = lib.inventory.filter{ case (id, book) => condition(book)}.toList.mkString("[", ",\n", "]")
+  
+    (s"""{"OK": {"message": $results}}""", lib)
   }
 }
 
