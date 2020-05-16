@@ -27,7 +27,6 @@ case class RemoveBook(id: Long) extends Action {
         (s"""{"ERROR": {"message": "Cannot delete ${bookToRemoval.get}, because it is lent"}}""", lib)
     else
       (s"""{"ERROR": {"message": "There is not a book with id=$id"}}""", lib)
-    
   }
 }
 
@@ -39,7 +38,7 @@ case class ListBooks() extends Action {
       .transform((a,b) => b.toList.map(x => (x._1.isAvailable, x._2)))
       .toList.map{
         case (book, summaries) => book + " " + summaries.map{
-          case (true, k)  => s"in: $k"
+          case (true,  k) => s"in: $k"
           case (false, k) => s"out: $k"
         }.mkString("(", ", ", ")")
       }.mkString("\n")
