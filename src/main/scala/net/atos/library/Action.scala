@@ -8,15 +8,24 @@ sealed trait Action {
 case class AddBook(title: String, year: Int, author: String) extends Action {
   def perform: LibraryAction = lib => {
     val nextId = lib.currentId + 1
-    val newEntry = (nextId -> Book(title, year, author, isAvailable = true))
+    val newBook = Book(title, year, author, isAvailable = true)
+    val newEntry = (nextId -> newBook)
     val updatedLib = Library(lib.inventory + newEntry, nextId)
-    ("OK", updatedLib)
+    (s"""{"OK": {"message": "$newBook has been added"}}""", updatedLib)
   }
 }
 case class RemoveBook(id: Long) extends Action {
   def perform: LibraryAction = lib => {
-    val updatedLib = Library(lib.inventory - id, lib.currentId)
-    ("OK", updatedLib)
+    val bookToRemoval = lib.inventory get id
+    if (bookToRemoval.isDefined)
+      if (bookToRemoval.get.isAvailable) {
+        val updatedLib = Library(lib.inventory - id, lib.currentId)
+        (s"""{"OK": {"message": "$bookToRemoval has been removed"}}""", updatedLib)
+      } else 
+        (s"""{"ERROR": {"message": "Cannot delete $bookToRemoval, because it is lent"}}""", lib)
+    else
+      (s"""{"ERROR": {"message": "There is not a book with id=$id"}}""", lib)
+    
   }
 }
 case class ListBooks() extends Action {
@@ -31,7 +40,7 @@ case class ListBooks() extends Action {
           case (false, k) => s"out: $k"
         }.mkString("(", ", ", ")")
       }.mkString("\n")
-    (listing, lib)
+    (s"""{"OK": {"message": "$listing"}}""", lib)
   }
 }
 case class SearchBook(title: Option[String], year: Option[Int], author: Option[String]) extends Action {
@@ -45,20 +54,20 @@ case class LendBook(id: Long, userName: String) extends Action {
     if (isAvailable) {
       val newEntry = (id -> Book(title, year, author, false, Some(userName)))
       val updatedLib = Library(lib.inventory - id + newEntry, lib.currentId)
-      (s"User $userName has lent the book with id $id", updatedLib)
+      (s"""{"OK": {"message": "User $userName has lent the book with id=$id"}}""", updatedLib)
     } else
-      (s"Book with id $id is already lent", lib)
+      (s"""{"ERROR": {"message": "The book with id=$id is already lent"}}""", lib)
   }
 }
 case class BookDetails(id: Long) extends Action {
   def perform: LibraryAction = lib => {
     val book = lib.inventory(id)
-    (s"$book", lib)
+    (s"""{"OK": {"message": "Book details: $book"}}""", lib)
   }
 }
 
 object Action {
-  
+
   type LibraryAction = Library => (String, Library)
   def unit(s: String): LibraryAction = lib => (s, lib)
 

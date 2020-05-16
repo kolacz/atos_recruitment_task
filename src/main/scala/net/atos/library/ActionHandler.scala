@@ -19,7 +19,7 @@ object ActionHandler {
       case "removeBook"  => argsJson.extract[RemoveBook]
       case "listBooks"   => argsJson.extract[ListBooks]
       case "searchBook"  => argsJson.extract[SearchBook]
-      case "lentBook"    => argsJson.extract[LendBook]
+      case "lendBook"    => argsJson.extract[LendBook]
       case "bookDetails" => argsJson.extract[BookDetails]
       case _ => ???
     }
