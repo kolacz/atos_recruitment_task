@@ -5,6 +5,7 @@ import Action._
 sealed trait Action {
   def perform: LibraryAction
 }
+
 case class AddBook(title: String, year: Int, author: String) extends Action {
   def perform: LibraryAction = lib => {
     val nextId = lib.currentId + 1
@@ -14,6 +15,7 @@ case class AddBook(title: String, year: Int, author: String) extends Action {
     (s"""{"OK": {"message": "$newBook has been added"}}""", updatedLib)
   }
 }
+
 case class RemoveBook(id: Long) extends Action {
   def perform: LibraryAction = lib => {
     val bookToRemoval = lib.inventory get id
@@ -28,6 +30,7 @@ case class RemoveBook(id: Long) extends Action {
     
   }
 }
+
 case class ListBooks() extends Action {
   def perform: LibraryAction = lib => {
     val listing = lib.inventory
@@ -43,11 +46,13 @@ case class ListBooks() extends Action {
     (s"""{"OK": {"message": "$listing"}}""", lib)
   }
 }
+
 case class SearchBook(title: Option[String], year: Option[Int], author: Option[String]) extends Action {
   def perform: LibraryAction = lib => {
     ("", lib)
   }
 }
+
 case class LendBook(id: Long, userName: String) extends Action {
   def perform: LibraryAction = lib => {
     val Book(title, year, author, isAvailable, lentBy) = lib.inventory(id)
@@ -59,11 +64,16 @@ case class LendBook(id: Long, userName: String) extends Action {
       (s"""{"ERROR": {"message": "The book with id=$id is already lent"}}""", lib)
   }
 }
+
 case class BookDetails(id: Long) extends Action {
   def perform: LibraryAction = lib => {
     val book = lib.inventory(id)
     (s"""{"OK": {"message": "Book details: $book"}}""", lib)
   }
+}
+
+case class VoidAction(message: String) extends Action {
+  def perform: LibraryAction = unit(message)
 }
 
 object Action {

@@ -1,15 +1,21 @@
 package net.atos.library
 
+import Library._
+
 object LibraryDriver extends App {
 
   Iterator.continually(io.StdIn.readLine)
     .takeWhile(_.nonEmpty)
-    .foldLeft(Action.unit("Initialization")(Library(inventory = Map[Long, Book](), currentId = 0))) { 
+    .foldLeft(Action.unit("Initialization")(Library(inventory = Map[Id, Book](), currentId = 0))) {
       case ((_, lib), line) =>
-        val (response, updatedLib) = ActionHandler.handle(line)(lib)
-        println(response)
-        (response, updatedLib)
+        val (resp, updatedLib) = RequestHandler.handle(line)(lib)
+        processResponse(resp)
+        (resp, updatedLib)
     }
+
+  def processResponse(response: String): Unit = {
+    println(response)
+  }
     
 }
 

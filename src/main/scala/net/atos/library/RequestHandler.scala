@@ -2,8 +2,9 @@ package net.atos.library
 
 import org.json4s._
 import org.json4s.native.JsonMethods._
+import scala.util.Try
 
-object ActionHandler {
+object RequestHandler {
 
   import Action._
 
@@ -21,7 +22,8 @@ object ActionHandler {
       case "searchBook"  => argsJson.extract[SearchBook]
       case "lendBook"    => argsJson.extract[LendBook]
       case "bookDetails" => argsJson.extract[BookDetails]
-      case _ => ???
+      case req =>
+        VoidAction(s"""{"ERROR": {"message": "Unknown request: '$req'"}}""")
     }
 
     action.perform(lib)
