@@ -2,10 +2,21 @@ package net.atos.library
 
 import Action._
 
+/**
+  * Trait with companion object containing implementation of all library actions
+  */
 sealed trait Action {
   def perform: LibraryAction[String]
 }
 
+/**
+  * Adds a new book to the library. Id is not passed as an argument,
+  * it is incremented during this action automatically.
+  *
+  * @param title
+  * @param year
+  * @param author
+  */
 case class AddBook(title: String, year: Int, author: String) extends Action {
   def perform: LibraryAction[String] = lib => {
     val nextId = lib.currentId + 1
@@ -16,7 +27,13 @@ case class AddBook(title: String, year: Int, author: String) extends Action {
   }
 }
 
-case class RemoveBook(id: Long) extends Action {
+/**
+  * Removes a book from the library by Id. When the book has been already lent
+  * or is not present in the registry it returns corresponding error message.
+  *
+  * @param id
+  */
+case class RemoveBook(id: Library.Id) extends Action {
   def perform: LibraryAction[String] = lib => {
     val bookToRemoval = lib.inventory get id
     if (bookToRemoval.isDefined)
@@ -30,6 +47,11 @@ case class RemoveBook(id: Long) extends Action {
   }
 }
 
+/**
+  * Returns a listing on all books in the library (distinctly) together with
+  * an information how many books are available/lent.
+  *
+  */
 case class ListBooks() extends Action {
   def perform: LibraryAction[String] = lib => {
     val listing = lib.inventory
@@ -44,12 +66,20 @@ case class ListBooks() extends Action {
   }
 }
 
+/**
+  * Returns a list of books that matches the provided search criteria.
+  * Each criterion is optional.
+  *
+  * @param title - or its substring
+  * @param year
+  * @param author - e.g. his first name only
+  */
 case class SearchBook(title: Option[String], year: Option[Int], author: Option[String]) extends Action {
   def perform: LibraryAction[String] = lib => {
     val condition: Book => Boolean = book =>
-      book.title.contains(title getOrElse "") &&
-      book.year.equals(year getOrElse book.year) &&
-      book.author.contains(author getOrElse "")
+      (book.title.toLowerCase) contains (title getOrElse "").toLowerCase &&
+      (book.author.toLowerCase) contains (author getOrElse "").toLowerCase &&
+      (book.year) equals (year getOrElse book.year)
 
     val results = lib.inventory.filter{ case (id, book) => condition(book)}.toList.mkString("[", ",\n", "]")
 
@@ -57,7 +87,15 @@ case class SearchBook(title: Option[String], year: Option[Int], author: Option[S
   }
 }
 
-case class LendBook(id: Long, userName: String) extends Action {
+/**
+  * Changes the book's `isAvailable` status from `true` to `false`.
+  * If a book has been already lent or there is not a book with a given Id,
+  * it returns an error message.
+  *
+  * @param id
+  * @param userName
+  */
+case class LendBook(id: Library.Id, userName: String) extends Action {
   def perform: LibraryAction[String] = lib => {
     val bookToLend = lib.inventory get id
     if (bookToLend.isDefined) {
@@ -73,25 +111,38 @@ case class LendBook(id: Long, userName: String) extends Action {
   }
 }
 
-case class BookDetails(id: Long) extends Action {
+/**
+  * Returns a pretty printed book info for a given Id.
+  * If there is not a book with a given Id within the registry, it returns an error message.
+  *
+  * @param id
+  */
+case class BookDetails(id: Library.Id) extends Action {
   def perform: LibraryAction[String] = lib => {
     val book = lib.inventory get id
     if (book.isDefined)
-      (s"""{"OK": {"message": "Book details: ${book.get}"}}""", lib)
+      (s"""{"OK": {"message": "${book.get}"}}""", lib)
     else
       (s"""{"ERROR": {"message": "There is not a book with id=$id"}}""", lib)
   }
 }
 
+/**
+  * A void action, that just forwards a message without changing any state.
+  *
+  * @param message
+  */
 case class VoidAction(message: String) extends Action {
   def perform: LibraryAction[String] = unit(message)
 }
 
 object Action {
 
-  type LibraryAction[A] = Library => (A, Library)
+  type LibraryAction[A] = Library => (A, Library)  // state action type alias
 
   def unit[A](a: A): LibraryAction[A] = lib => (a, lib)
+
+  // Simple functors to deal with stateful transformations
 
   def map[A,B](action: LibraryAction[A])(f: A => B): LibraryAction[B] =
     lib => {

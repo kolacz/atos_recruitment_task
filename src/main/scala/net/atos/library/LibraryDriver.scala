@@ -2,6 +2,9 @@ package net.atos.library
 
 import Library._
 
+/**
+  * The main object of the purely functional implementation of the Library logic.
+  */
 object LibraryDriver extends App {
 
   Iterator.continually(io.StdIn.readLine)

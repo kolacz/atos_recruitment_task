@@ -2,13 +2,13 @@ package net.atos.library
 
 /**
   * Book consist of title, year and author.
-  * Each book should have unique identifier (ID) across application.
+  * Each book has an unique identifier (Id) across application.
   *
   * @param title
   * @param year
   * @param author
-  * @param isAvailable
-  * @param lentBy
+  * @param isAvailable - if it's possible to lend the book
+  * @param lentBy - a name of user who has lent the book
   */
 final case class Book(id: Library.Id,
                       title: String,
@@ -17,6 +17,6 @@ final case class Book(id: Library.Id,
                       isAvailable: Boolean,
                       lentBy: Option[String] = None) {
 
-  override def toString: String = s"Book(id=$id, title=$title, year=$year, author=$author, isAvailable=$isAvailable)"
+  override def toString: String = s"(id=$id, title=$title, year=$year, author=$author, isAvailable=$isAvailable, lentBy=${if (lentBy.isDefined) lentBy else "nobody"})"
 
 }
