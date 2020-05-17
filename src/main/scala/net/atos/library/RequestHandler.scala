@@ -6,7 +6,7 @@ import scala.util.Try
 
 /**
   * Object that parses a JSON request, chooses appropriate action and returns corresponding LibraryAction.
-  * In a case of an incorrect JSON or unknown `actionName` it returns a void action with an error message.
+  * In the case of an incorrect JSON or unknown `actionName` it returns a void action with an error message.
   */
 object RequestHandler {
 

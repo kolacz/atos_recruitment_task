@@ -60,8 +60,8 @@ case class ListBooks() extends Action {
       .toList.map{ case (book, summaries) => 
         val (available, lent) = summaries.foldLeft((0,0)){ case ((acc1, acc2), b) =>
           if (b) (acc1 + 1, acc2) else (acc1, acc2 + 1) }
-        s"(title=${book._1}, year=${book._2}, author=${book._3}, available=$available, lent=$lent)"
-      }.mkString("""["""", """", """", """"]""")
+        s""""(title=${book._1}, year=${book._2}, author=${book._3}, available=$available, lent=$lent)""""
+      }.mkString("[", ", ", "]")
     (s"""{"OK": {"message": $listing}}""", lib)
   }
 }
@@ -77,11 +77,11 @@ case class ListBooks() extends Action {
 case class SearchBook(title: Option[String], year: Option[Int], author: Option[String]) extends Action {
   def perform: LibraryAction[String] = lib => {
     val condition: Book => Boolean = book =>
-      (book.title.toLowerCase) contains (title getOrElse "").toLowerCase &&
-      (book.author.toLowerCase) contains (author getOrElse "").toLowerCase &&
-      (book.year) equals (year getOrElse book.year)
+      (book.title.toLowerCase contains (title getOrElse "").toLowerCase) &&
+      (book.author.toLowerCase contains (author getOrElse "").toLowerCase) &&
+      (book.year equals (year getOrElse book.year))
 
-    val results = lib.inventory.filter{ case (id, book) => condition(book)}.toList.mkString("[", ",\n", "]")
+    val results = lib.inventory.filter{ case (id, book) => condition(book)}.toList.map(_._2).mkString("[", ",\n", "]")
 
     (s"""{"OK": {"message": $results}}""", lib)
   }
@@ -156,4 +156,14 @@ object Action {
       g(s)(lib2)
     }
 
+  def map2[A,B,C](a1: LibraryAction[A], a2: LibraryAction[B])(f: (A, B) => C): LibraryAction[C] =
+    lib => {
+      val (a, lib2) = a1(lib)
+      val (b, lib3) = a2(lib2)
+      (f(a, b), lib3)
+    }
+
+  def sequence[A](actions: List[LibraryAction[A]]): LibraryAction[List[A]] = {
+    actions.foldRight(unit(List[A]())) ((f, acc) => map2(f, acc)(_ :: _))
+  }
 }
