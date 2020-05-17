@@ -8,8 +8,8 @@ class RequestHandlerSpec extends AnyFlatSpec with Matchers {
   "The RequestHandler object" should "be able to add a new book into the library registry" in {
     val lib = Library(Map(), 0)
     val addRequest = """{"addBook": {"title": "Purely Functional Data Structures", "year": 1996, "author": "Chris Okasaki"}}"""
-    val (response, _) = RequestHandler.handle(addRequest)(lib)
-    response shouldEqual s"""{"OK": {"message": "Book(title=Purely Functional Data Structures, year=1996, author=Chris Okasaki, isAvailable=true) has been added"}}"""
+    val (response, lib2) = RequestHandler.handle(addRequest)(lib)
+    response shouldEqual s"""{"OK": {"message": "Book(id=${lib2.currentId}, title=Purely Functional Data Structures, year=1996, author=Chris Okasaki, isAvailable=true) has been added"}}"""
   }
 
   it should "be able to remove a book from the library registry" in {

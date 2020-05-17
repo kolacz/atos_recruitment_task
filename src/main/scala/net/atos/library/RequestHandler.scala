@@ -26,7 +26,7 @@ object RequestHandler {
       case "lendBook"    => argsJson.extract[LendBook]
       case "bookDetails" => argsJson.extract[BookDetails]
       case req =>
-        VoidAction(s"""{"ERROR": {"message": "${if (req equals "wrongInput") "Wrong input!" else "Unknown request: '$req'"}"}}""")
+        VoidAction(s"""{"ERROR": {"message": "${if (req equals "wrongInput") "Wrong input!" else s"Unknown request: '$req'"}"}}""")
     }
 
     action.perform(lib)

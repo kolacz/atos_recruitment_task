@@ -17,6 +17,6 @@ final case class Book(id: Library.Id,
                       isAvailable: Boolean,
                       lentBy: Option[String] = None) {
 
-  override def toString: String = s"Book(title=$title, year=$year, author=$author, isAvailable=$isAvailable)"
+  override def toString: String = s"Book(id=$id, title=$title, year=$year, author=$author, isAvailable=$isAvailable)"
 
 }

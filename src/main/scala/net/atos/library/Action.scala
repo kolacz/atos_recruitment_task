@@ -33,16 +33,14 @@ case class RemoveBook(id: Long) extends Action {
 case class ListBooks() extends Action {
   def perform: LibraryAction[String] = lib => {
     val listing = lib.inventory
-      .groupBy(_._2).transform((a,b) => b.size)
-      .groupBy(x => s"${x._1.title} ${x._1.year} ${x._1.author}")
-      .transform((a,b) => b.toList.map(x => (x._1.isAvailable, x._2)))
-      .toList.map{
-        case (book, summaries) => book + " " + summaries.map{
-          case (true,  k) => s"in: $k"
-          case (false, k) => s"out: $k"
-        }.mkString("(", ", ", ")")
-      }.mkString("\n")
-    (s"""{"OK": {"message": "$listing"}}""", lib)
+      .groupBy{ case (a,b) => (b.title, b.year, b.author)}
+      .transform((a,b) => b.map(_._2.isAvailable))
+      .toList.map{ case (book, summaries) => 
+        val (available, lent) = summaries.foldLeft((0,0)){ case ((acc1, acc2), b) =>
+          if (b) (acc1 + 1, acc2) else (acc1, acc2 + 1) }
+        s"(title=${book._1}, year=${book._2}, author=${book._3}, available=$available, lent=$lent)"
+      }.mkString("""["""", """", """", """"]""")
+    (s"""{"OK": {"message": $listing}}""", lib)
   }
 }
 
@@ -61,20 +59,27 @@ case class SearchBook(title: Option[String], year: Option[Int], author: Option[S
 
 case class LendBook(id: Long, userName: String) extends Action {
   def perform: LibraryAction[String] = lib => {
-    val Book(_, title, year, author, isAvailable, lentBy) = lib.inventory(id)
-    if (isAvailable) {
-      val newEntry = (id -> Book(id, title, year, author, false, Some(userName)))
-      val updatedLib = Library(lib.inventory - id + newEntry, lib.currentId)
-      (s"""{"OK": {"message": "User $userName has lent the book with id=$id"}}""", updatedLib)
-    } else
-      (s"""{"ERROR": {"message": "The book with id=$id is already lent"}}""", lib)
+    val bookToLend = lib.inventory get id
+    if (bookToLend.isDefined) {
+      val Book(_, title, year, author, isAvailable, lentBy) = bookToLend.get
+      if (isAvailable) {
+        val newEntry = (id -> Book(id, title, year, author, false, Some(userName)))
+        val updatedLib = Library(lib.inventory - id + newEntry, lib.currentId)
+        (s"""{"OK": {"message": "User $userName has lent the book with id=$id"}}""", updatedLib)
+      } else
+        (s"""{"ERROR": {"message": "The book with id=$id is already lent"}}""", lib)
+    } else 
+      (s"""{"ERROR": {"message": "There is not a book with id=$id"}}""", lib)
   }
 }
 
 case class BookDetails(id: Long) extends Action {
   def perform: LibraryAction[String] = lib => {
-    val book = lib.inventory(id)
-    (s"""{"OK": {"message": "Book details: $book"}}""", lib)
+    val book = lib.inventory get id
+    if (book.isDefined)
+      (s"""{"OK": {"message": "Book details: ${book.get}"}}""", lib)
+    else
+      (s"""{"ERROR": {"message": "There is not a book with id=$id"}}""", lib)
   }
 }
 
