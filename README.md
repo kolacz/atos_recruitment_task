@@ -48,6 +48,8 @@ sbt run
 {"OK": {"message": "User foo has lent the book with id=1"}}
 {"removeBook": {"id": 1}}
 {"ERROR": {"message": "Cannot delete the book with id=1, because it is lent"}}
+{"listBooks": {}}
+{"OK": {"message": ["(title=Ostry Cień Mgły, year=2020, author=MC President, available=0, lent=1)"]}}
 
 [success] Total time: 1153 s (19:13), completed May 17, 2020, 10:18:58 PM
 ```
