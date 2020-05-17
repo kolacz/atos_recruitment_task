@@ -3,11 +3,11 @@ package net.atos.library
 import Action._
 
 sealed trait Action {
-  def perform: LibraryAction
+  def perform: LibraryAction[String]
 }
 
 case class AddBook(title: String, year: Int, author: String) extends Action {
-  def perform: LibraryAction = lib => {
+  def perform: LibraryAction[String] = lib => {
     val nextId = lib.currentId + 1
     val newBook = Book(title, year, author, isAvailable = true)
     val newEntry = (nextId -> newBook)
@@ -17,7 +17,7 @@ case class AddBook(title: String, year: Int, author: String) extends Action {
 }
 
 case class RemoveBook(id: Long) extends Action {
-  def perform: LibraryAction = lib => {
+  def perform: LibraryAction[String] = lib => {
     val bookToRemoval = lib.inventory get id
     if (bookToRemoval.isDefined)
       if (bookToRemoval.get.isAvailable) {
@@ -31,7 +31,7 @@ case class RemoveBook(id: Long) extends Action {
 }
 
 case class ListBooks() extends Action {
-  def perform: LibraryAction = lib => {
+  def perform: LibraryAction[String] = lib => {
     val listing = lib.inventory
       .groupBy(_._2).transform((a,b) => b.size)
       .groupBy(x => s"${x._1.title} ${x._1.year} ${x._1.author}")
@@ -47,7 +47,7 @@ case class ListBooks() extends Action {
 }
 
 case class SearchBook(title: Option[String], year: Option[Int], author: Option[String]) extends Action {
-  def perform: LibraryAction = lib => {
+  def perform: LibraryAction[String] = lib => {
     val condition: Book => Boolean = book =>
       book.title.contains(title getOrElse "") &&
       book.year.equals(year getOrElse book.year) &&
@@ -60,7 +60,7 @@ case class SearchBook(title: Option[String], year: Option[Int], author: Option[S
 }
 
 case class LendBook(id: Long, userName: String) extends Action {
-  def perform: LibraryAction = lib => {
+  def perform: LibraryAction[String] = lib => {
     val Book(title, year, author, isAvailable, lentBy) = lib.inventory(id)
     if (isAvailable) {
       val newEntry = (id -> Book(title, year, author, false, Some(userName)))
@@ -72,19 +72,32 @@ case class LendBook(id: Long, userName: String) extends Action {
 }
 
 case class BookDetails(id: Long) extends Action {
-  def perform: LibraryAction = lib => {
+  def perform: LibraryAction[String] = lib => {
     val book = lib.inventory(id)
     (s"""{"OK": {"message": "Book details: $book"}}""", lib)
   }
 }
 
 case class VoidAction(message: String) extends Action {
-  def perform: LibraryAction = unit(message)
+  def perform: LibraryAction[String] = unit(message)
 }
 
 object Action {
 
-  type LibraryAction = Library => (String, Library)
-  def unit(s: String): LibraryAction = lib => (s, lib)
+  type LibraryAction[A] = Library => (A, Library)
+
+  def unit[A](a: A): LibraryAction[A] = lib => (a, lib)
+
+  def map[A,B](action: LibraryAction[A])(f: A => B): LibraryAction[B] =
+    lib => {
+      val (s, lib2) = action(lib)
+      (f(s), lib2)
+    }
+
+  def flatMap[A,B](action: LibraryAction[A])(g: A => LibraryAction[B]): LibraryAction[B] =
+    lib => {
+      val (s, lib2) = action(lib)
+      g(s)(lib2)
+    }
 
 }

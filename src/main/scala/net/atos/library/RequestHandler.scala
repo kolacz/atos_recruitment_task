@@ -10,7 +10,7 @@ object RequestHandler {
 
   implicit val formats: Formats = DefaultFormats.withStrictOptionParsing
 
-  def handle(request: String): LibraryAction = lib => {
+  def handle(request: String): LibraryAction[String] = lib => {
     val json = Try{ parse(request) } getOrElse new JObject(List(("wrongInput", null.asInstanceOf[JValue])))
     val actionName = json match {
       case JObject(List((actionName, _))) => actionName
