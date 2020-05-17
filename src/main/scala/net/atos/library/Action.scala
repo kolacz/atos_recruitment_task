@@ -9,7 +9,7 @@ sealed trait Action {
 case class AddBook(title: String, year: Int, author: String) extends Action {
   def perform: LibraryAction[String] = lib => {
     val nextId = lib.currentId + 1
-    val newBook = Book(title, year, author, isAvailable = true)
+    val newBook = Book(nextId, title, year, author, isAvailable = true)
     val newEntry = (nextId -> newBook)
     val updatedLib = Library(lib.inventory + newEntry, nextId)
     (s"""{"OK": {"message": "$newBook has been added"}}""", updatedLib)
@@ -61,9 +61,9 @@ case class SearchBook(title: Option[String], year: Option[Int], author: Option[S
 
 case class LendBook(id: Long, userName: String) extends Action {
   def perform: LibraryAction[String] = lib => {
-    val Book(title, year, author, isAvailable, lentBy) = lib.inventory(id)
+    val Book(_, title, year, author, isAvailable, lentBy) = lib.inventory(id)
     if (isAvailable) {
-      val newEntry = (id -> Book(title, year, author, false, Some(userName)))
+      val newEntry = (id -> Book(id, title, year, author, false, Some(userName)))
       val updatedLib = Library(lib.inventory - id + newEntry, lib.currentId)
       (s"""{"OK": {"message": "User $userName has lent the book with id=$id"}}""", updatedLib)
     } else

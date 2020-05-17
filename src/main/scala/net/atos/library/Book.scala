@@ -1,6 +1,17 @@
 package net.atos.library
 
-final case class Book(title: String, 
+/**
+  * Book consist of title, year and author.
+  * Each book should have unique identifier (ID) across application.
+  *
+  * @param title
+  * @param year
+  * @param author
+  * @param isAvailable
+  * @param lentBy
+  */
+final case class Book(id: Library.Id,
+                      title: String,
                       year: Int, 
                       author: String, 
                       isAvailable: Boolean,

@@ -5,7 +5,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 class RequestHandlerSpec extends AnyFlatSpec with Matchers {
-  "The RequestHandler object" should "be able to insert a book into the library registry" in {
+  "The RequestHandler object" should "be able to add a new book into the library registry" in {
     val lib = Library(Map(), 0)
     val addRequest = """{"addBook": {"title": "Purely Functional Data Structures", "year": 1996, "author": "Chris Okasaki"}}"""
     val (response, _) = RequestHandler.handle(addRequest)(lib)
