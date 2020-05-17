@@ -22,9 +22,9 @@ case class RemoveBook(id: Long) extends Action {
     if (bookToRemoval.isDefined)
       if (bookToRemoval.get.isAvailable) {
         val updatedLib = Library(lib.inventory - id, lib.currentId)
-        (s"""{"OK": {"message": "${bookToRemoval.get} has been removed"}}""", updatedLib)
+        (s"""{"OK": {"message": "The book with id=$id has been removed"}}""", updatedLib)
       } else 
-        (s"""{"ERROR": {"message": "Cannot delete ${bookToRemoval.get}, because it is lent"}}""", lib)
+        (s"""{"ERROR": {"message": "Cannot delete the book with id=$id, because it is lent"}}""", lib)
     else
       (s"""{"ERROR": {"message": "There is not a book with id=$id"}}""", lib)
   }
