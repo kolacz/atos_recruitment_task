@@ -1,7 +1,7 @@
 package net.atos.library
 
 /**
-  * Book consist of title, year and author.
+  * Book consists of title, year and author.
   * Each book has an unique identifier (Id) across application.
   *
   * @param title

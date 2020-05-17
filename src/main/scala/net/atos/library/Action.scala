@@ -3,7 +3,7 @@ package net.atos.library
 import Action._
 
 /**
-  * Trait with companion object containing implementation of all library actions
+  * Trait with companion object containing implementations of all library actions
   */
 sealed trait Action {
   def perform: LibraryAction[String]
@@ -49,15 +49,14 @@ case class RemoveBook(id: Library.Id) extends Action {
 
 /**
   * Returns a listing on all books in the library (distinctly) together with
-  * an information how many books are available/lent.
-  *
+  * an information, how many books are available/lent.
   */
 case class ListBooks() extends Action {
   def perform: LibraryAction[String] = lib => {
     val listing = lib.inventory
       .groupBy{ case (a,b) => (b.title, b.year, b.author)}
       .transform((a,b) => b.map(_._2.isAvailable))
-      .toList.sortBy{ case (a,b) => a._1 }
+      .toList.sortBy{ case (a,b) => a._1 }  // sortBy title
       .map{ case (book, summaries) =>
         val (available, lent) = summaries.foldLeft((0,0)){ case ((acc1, acc2), b) =>
           if (b) (acc1 + 1, acc2) else (acc1, acc2 + 1) }
