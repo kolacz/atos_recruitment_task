@@ -37,7 +37,7 @@ object RequestHandler {
 
   def retrieveActionName(json: JValue): String = json match {
     case JObject(List((actionName, _))) => actionName
-    case JObject(Nil) => "wrongInput"
+    case _ => "wrongInput"
   }
 
 }

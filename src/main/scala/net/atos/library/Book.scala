@@ -17,6 +17,6 @@ final case class Book(id: Library.Id,
                       isAvailable: Boolean,
                       lentBy: Option[String] = None) {
 
-  override def toString: String = s"(id=$id, title=$title, year=$year, author=$author, isAvailable=$isAvailable, lentBy=${if (lentBy.isDefined) lentBy else "nobody"})"
+  override def toString: String = s"(id=$id, title=$title, year=$year, author=$author, isAvailable=$isAvailable, lentBy=${if (lentBy.isDefined) lentBy.get else "nobody"})"
 
 }

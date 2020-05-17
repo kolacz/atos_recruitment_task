@@ -57,7 +57,8 @@ case class ListBooks() extends Action {
     val listing = lib.inventory
       .groupBy{ case (a,b) => (b.title, b.year, b.author)}
       .transform((a,b) => b.map(_._2.isAvailable))
-      .toList.map{ case (book, summaries) => 
+      .toList.sortBy{ case (a,b) => a._1 }
+      .map{ case (book, summaries) =>
         val (available, lent) = summaries.foldLeft((0,0)){ case ((acc1, acc2), b) =>
           if (b) (acc1 + 1, acc2) else (acc1, acc2 + 1) }
         s""""(title=${book._1}, year=${book._2}, author=${book._3}, available=$available, lent=$lent)""""
@@ -81,7 +82,10 @@ case class SearchBook(title: Option[String], year: Option[Int], author: Option[S
       (book.author.toLowerCase contains (author getOrElse "").toLowerCase) &&
       (book.year equals (year getOrElse book.year))
 
-    val results = lib.inventory.filter{ case (id, book) => condition(book)}.toList.map(_._2).mkString("[", ",\n", "]")
+    val results = lib.inventory
+      .filter{ case (id, book) => condition(book)}
+      .toList.sortBy(_._1)  // sortBy id
+      .map(x => s""""${x._2}"""").mkString("[", ", ", "]")
 
     (s"""{"OK": {"message": $results}}""", lib)
   }

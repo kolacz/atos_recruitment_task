@@ -7,9 +7,11 @@ import Library._
   */
 object LibraryDriver extends App {
 
+  val initLibrary = Library(inventory = Map[Id, Book](), currentId = 0)
+
   Iterator.continually(io.StdIn.readLine)
     .takeWhile(_.nonEmpty)
-    .foldLeft(Action.unit(())(Library(inventory = Map[Id, Book](), currentId = 0))) {
+    .foldLeft(Action.unit(())(initLibrary)) {
       case ((_, lib), line) =>
         Action.map(RequestHandler.handle(line))(processResponse)(lib)
     }
